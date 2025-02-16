@@ -15,7 +15,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
       with:
-        fetch-depth: 0
+        fetch-depth: 1
 
     - name: Set up Node.js
       uses: actions/setup-node@v3
@@ -23,16 +23,28 @@ jobs:
         node-version: ${{ env.NODE_VERSION }}
         cache: 'npm'
 
+    - name: Cache node modules
+      uses: actions/cache@v3
+      with:
+        path: ~/.npm
+        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-node-
+
     - name: Install dependencies
       run: |
+        git config --global --add safe.directory /github/workspace
         npm install -g npm@latest
-        npm ci
+        npm ci --legacy-peer-deps
+      env:
+        CI: true
 
     - name: Build
       run: |
         npm run build
       env:
         CI: false
+        NODE_ENV: production
 
     - name: Upload artifact
       uses: actions/upload-artifact@v3
@@ -42,7 +54,9 @@ jobs:
           .next
           public
           package.json
+          package-lock.json
           next.config.js
+          node_modules
 
   deploy:
     needs: build
@@ -52,6 +66,7 @@ jobs:
     - uses: actions/download-artifact@v3
       with:
         name: node-app
+        path: .
 
     - name: Deploy to Azure
       uses: azure/webapps-deploy@v2
