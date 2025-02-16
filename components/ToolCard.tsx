@@ -12,6 +12,12 @@ interface ToolCardProps {
 }
 
 export function ToolCard({ tool, onClick, delay = 0 }: ToolCardProps) {
+  const handleVisitWebsite = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    window.open(tool.url, '_blank', 'noopener,noreferrer')
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
@@ -37,11 +43,8 @@ export function ToolCard({ tool, onClick, delay = 0 }: ToolCardProps) {
         </div>
         <div className="flex justify-end mt-2">
           <button
-            className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800 transition-colors"
-            onClick={(e) => {
-              e.stopPropagation()
-              window.open(tool.url, '_blank', 'noopener,noreferrer')
-            }}
+            onClick={handleVisitWebsite}
+            className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800 transition-colors z-10"
           >
             直达官网
             <svg 

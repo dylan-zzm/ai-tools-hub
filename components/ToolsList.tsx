@@ -5,13 +5,22 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { ToolCard } from './ToolCard'
 
-// 将 Tool 接口导出，以便其他组件使用
+// 将 Tool 接口导出
 export interface Tool {
   id: string
   name: string
   description: string
   icon: string
   url: string
+  category?: string
+  rating?: number
+  reviews?: number
+  pricing?: {
+    name: string
+    price: string
+    features: string[]
+  }[]
+  features?: string[]
 }
 
 interface Category {
@@ -20,7 +29,8 @@ interface Category {
   tools: Tool[]
 }
 
-const toolsData: Category[] = [
+// 确保导出 toolsData
+export const toolsData: Category[] = [
   {
     id: 'creative',
     title: '创意生成',
@@ -28,9 +38,45 @@ const toolsData: Category[] = [
       {
         id: 'midjourney',
         name: 'Midjourney',
-        description: 'AI图像生成工具的领导者',
+        description: '这个页面有修改文字，您看这个工具的详情页。',
         icon: '/tools/midjourney.png',
-        url: 'https://www.midjourney.com'
+        url: 'https:raphael.app',
+        category: '创意生成',
+        rating: 4.9,
+        reviews: 1280,
+        pricing: [
+          { 
+            name: '基础版', 
+            price: '0美元/月', 
+            features: [
+              '没有额度限制',
+              '无需用户注册',
+              '不需要魔法',
+              '不限速'
+            ] 
+          },
+          { 
+            name: '专业版', 
+            price: '30美元/月', 
+            features: [
+              '完整的商业授权文件',
+              '隐/显性水印添加',
+              '转换为PS可编辑的形式',
+              '图片生成可叠加图层',
+              '专属的文件夹管理'
+            ] 
+          }
+        ],
+        features: [
+          '支持中英文提示词描述',
+          '内置多种艺术风格和参考',
+          '实时预览和快速迭代',
+          '批量图片生成和导出',
+          '图片编辑与风格变体',
+          '完整的商业版权授权',
+          'Discord社区交流支持',
+          'API接口调用支持'
+        ]
       },
       {
         id: 'dalle',

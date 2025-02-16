@@ -1,39 +1,54 @@
+'use client'
+
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
 import { ToolReviews } from '@/components/ToolReviews'
 import { RelatedTools } from '@/components/RelatedTools'
-
-// 模拟数据，实际应该从数据库获取
-const toolData = {
-  midjourney: {
-    id: 'midjourney',
-    name: 'Midjourney',
-    description: 'AI图像生成工具的领导者，通过简单的文字描述生成高质量图像。支持多种艺术风格，适用于广告创意、产品展示等场景。',
-    category: '广告制作',
-    icon: '/icons/midjourney.png',
-    rating: 4.9,
-    reviews: 1280,
-    pricing: [
-      { name: '基础版', price: '10美元/月', features: ['每月100次生成', '基础分辨率', '普通用户支持'] },
-      { name: '专业版', price: '30美元/月', features: ['无限次生成', '高分辨率', '优先用户支持'] }
-    ],
-    features: [
-      '支持中英文提示词',
-      '多种艺术风格选择',
-      '批量图片生成',
-      '图片编辑与变体',
-      '商业版权授权'
-    ],
-    website: 'https://www.midjourney.com'
-  },
-  // 其他工具数据...
-}
+import { toolsData, Tool } from '@/components/ToolsList'
+import { useEffect, useState } from 'react'
 
 export default function ToolPage({ params }: { params: { id: string } }) {
-  const tool = toolData[params.id as keyof typeof toolData]
+  const [tool, setTool] = useState<Tool | null>(null)
+
+  useEffect(() => {
+    // 在客户端查找工具
+    const findTool = () => {
+      for (const category of toolsData) {
+        const found = category.tools.find(t => t.id === params.id)
+        if (found) {
+          // 添加默认值
+          setTool({
+            ...found,
+            category: found.category || '未分类',
+            rating: found.rating || 0,
+            reviews: found.reviews || 0,
+            pricing: found.pricing || [
+              { 
+                name: '基础版', 
+                price: '暂无价格', 
+                features: ['暂无详细信息'] 
+              }
+            ],
+            features: found.features || [
+              '暂无特性信息'
+            ]
+          })
+          return
+        }
+      }
+      notFound()
+    }
+
+    findTool()
+  }, [params.id])
 
   if (!tool) {
-    notFound()
+    return <div className="min-h-screen bg-gray-50 p-8 flex items-center justify-center">
+      <div className="text-center">
+        <div className="text-2xl font-bold text-gray-600 mb-2">加载中...</div>
+        <div className="text-gray-500">正在获取工具信息</div>
+      </div>
+    </div>
   }
 
   return (
@@ -43,12 +58,13 @@ export default function ToolPage({ params }: { params: { id: string } }) {
           {/* 工具头部信息 */}
           <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-8 text-white">
             <div className="flex items-center space-x-6">
-              <div className="w-24 h-24 relative">
+              <div className="w-24 h-24 relative bg-white/10 rounded-xl p-2">
                 <Image
                   src={tool.icon}
                   alt={tool.name}
-                  fill
-                  className="rounded-xl object-cover"
+                  width={80}
+                  height={80}
+                  className="rounded-lg object-contain"
                 />
               </div>
               <div>
@@ -100,7 +116,7 @@ export default function ToolPage({ params }: { params: { id: string } }) {
             {/* 访问按钮 */}
             <div className="mt-8 flex justify-center">
               <a
-                href={tool.website}
+                href={tool.url}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition-colors"

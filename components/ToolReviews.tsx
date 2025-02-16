@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import Image from 'next/image'
 
@@ -15,30 +15,70 @@ interface Review {
   date: string
 }
 
-// 模拟评论数据
-const mockReviews: Review[] = [
-  {
-    id: '1',
-    user: {
-      name: '张三',
-      avatar: '/avatars/user1.png'
-    },
-    rating: 5,
-    content: '非常好用的工具，大大提高了工作效率！',
-    date: '2024-02-13'
-  },
-  // 添加更多评论...
-]
+// 从 localStorage 获取评论
+const getStoredReviews = (toolId: string): Review[] => {
+  if (typeof window === 'undefined') return []
+  const stored = localStorage.getItem(`reviews_${toolId}`)
+  return stored ? JSON.parse(stored) : []
+}
+
+// 保存评论到 localStorage
+const saveReviews = (toolId: string, reviews: Review[]) => {
+  localStorage.setItem(`reviews_${toolId}`, JSON.stringify(reviews))
+}
 
 export function ToolReviews({ toolId }: { toolId: string }) {
-  const [reviews] = useState<Review[]>(mockReviews)
+  const [reviews, setReviews] = useState<Review[]>([])
   const [newReview, setNewReview] = useState('')
   const [rating, setRating] = useState(5)
+  const [submitting, setSubmitting] = useState(false)
 
-  const handleSubmitReview = (e: React.FormEvent) => {
+  // 加载已有评论
+  useEffect(() => {
+    setReviews(getStoredReviews(toolId))
+  }, [toolId])
+
+  const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault()
-    // 处理评论提交
-    console.log({ rating, content: newReview })
+    if (!newReview.trim()) {
+      alert('请输入评论内容')
+      return
+    }
+
+    setSubmitting(true)
+
+    try {
+      // 创建新评论
+      const review: Review = {
+        id: Date.now().toString(),
+        user: {
+          name: '匿名用户',  // 可以改为实际用户名
+          avatar: '/avatars/default.png'  // 默认头像
+        },
+        rating,
+        content: newReview,
+        date: new Date().toISOString().split('T')[0]
+      }
+
+      // 更新状态
+      const updatedReviews = [review, ...reviews]
+      setReviews(updatedReviews)
+      
+      // 保存到 localStorage
+      saveReviews(toolId, updatedReviews)
+
+      // 重置表单
+      setNewReview('')
+      setRating(5)
+
+      // 显示成功提示
+      alert('评论提交成功！')
+    } catch (error) {
+      console.error('提交评论失败:', error)
+      alert('评论提交失败，请重试')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -59,7 +99,8 @@ export function ToolReviews({ toolId }: { toolId: string }) {
                 <Image
                   src={review.avatar}
                   alt={review.user.name}
-                  fill
+                  width={40}
+                  height={40}
                   className="rounded-full"
                 />
               </div>
@@ -122,9 +163,12 @@ export function ToolReviews({ toolId }: { toolId: string }) {
         </div>
         <button
           type="submit"
-          className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+          disabled={submitting}
+          className={`bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors ${
+            submitting ? 'opacity-50 cursor-not-allowed' : ''
+          }`}
         >
-          提交评价
+          {submitting ? '提交中...' : '提交评价'}
         </button>
       </form>
     </div>
